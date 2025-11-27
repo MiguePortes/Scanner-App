@@ -25,7 +25,7 @@ const Registrar = ({ setShowbuttons }: any) => {
   const [precioVenta, setPrecioVenta] = useState("");
   const [fechaCompra, setFechaCompra] = useState("");
   const [fechaCaducidad, setFechaCaducidad] = useState("");
-  const [ cantidad, setCantidad] = useState("");
+  const [cantidad, setCantidad] = useState("");
   const [codigo, setCodigo] = useState("");
 
   //* Inicio camera
@@ -64,8 +64,18 @@ const Registrar = ({ setShowbuttons }: any) => {
   //* fin camera
 
   const guardarProducto = async () => {
-    if (!nombre || !marca) {
-      Alert.alert("Error", "Nombre y marca son obligatorios.");
+    if (
+      nombre === "" ||
+      marca === "" ||
+      proveedor === "" ||
+      precioCompra === "" ||
+      precioVenta === "" ||
+      fechaCompra === "" ||
+      fechaCaducidad === "" ||
+      codigo === "" ||
+      cantidad === ""
+    ) {
+      Alert.alert("Error", "Todos los campos son obligatorios.");
       return;
     }
 
@@ -84,20 +94,19 @@ const Registrar = ({ setShowbuttons }: any) => {
       });
 
       Alert.alert("Éxito", "Producto guardado correctamente 🎉");
-
-      setNombre("");
-      setMarca("");
-      setProveedor("");
-      setPrecioCompra("");
-      setPrecioVenta("");
-      setFechaCompra("");
-      setFechaCaducidad("");
-      setCodigo("");
-      setCantidad("")
     } catch (error) {
       Alert.alert("Error", "No se pudo guardar: " + error);
       console.log(error);
     }
+    setNombre("");
+    setMarca("");
+    setProveedor("");
+    setPrecioCompra("");
+    setPrecioVenta("");
+    setFechaCompra("");
+    setFechaCaducidad("");
+    setCodigo("");
+    setCantidad("");
   };
 
   return (
@@ -137,18 +146,24 @@ const Registrar = ({ setShowbuttons }: any) => {
 
           <View style={styles.content}>
             <Text style={styles.label}>Datos generales</Text>
-            <TextInput 
-            value={nombre}
-            onChangeText={setNombre}
-            style={styles.Input} placeholder="Nombre del Producto" />
-            <TextInput 
-            value={marca}
-            onChangeText={setMarca}
-            style={styles.Input} placeholder="Marca" />
             <TextInput
-            value={proveedor}
-            onChangeText={setProveedor}
-            style={styles.Input} placeholder="Proveedor" />
+              value={nombre}
+              onChangeText={setNombre}
+              style={styles.Input}
+              placeholder="Nombre del Producto"
+            />
+            <TextInput
+              value={marca}
+              onChangeText={setMarca}
+              style={styles.Input}
+              placeholder="Marca"
+            />
+            <TextInput
+              value={proveedor}
+              onChangeText={setProveedor}
+              style={styles.Input}
+              placeholder="Proveedor"
+            />
 
             <Text style={styles.label}>Precios</Text>
             <View
@@ -159,13 +174,17 @@ const Registrar = ({ setShowbuttons }: any) => {
               }}
             >
               <TextInput
-              value={precioCompra}
-              onChangeText={setPrecioCompra}
-              style={styles.minput} placeholder="Precio de Compra" />
-              <TextInput 
-              value={precioVenta}
-              onChangeText={setPrecioCompra}
-              style={styles.minput} placeholder="Precio de Venta" />
+                value={precioCompra}
+                onChangeText={setPrecioCompra}
+                style={styles.minput}
+                placeholder="Precio de Compra"
+              />
+              <TextInput
+                value={precioVenta}
+                onChangeText={setPrecioVenta}
+                style={styles.minput}
+                placeholder="Precio de Venta"
+              />
             </View>
 
             <Text style={styles.label}>Fechas</Text>
@@ -180,20 +199,24 @@ const Registrar = ({ setShowbuttons }: any) => {
                 <Text style={{ fontSize: 12, color: "#696969ff" }}>
                   Fecha Compra
                 </Text>
-                <TextInput 
-                value={fechaCompra}
-                onChangeText={setFechaCompra}
-                style={styles.minminput} placeholder="dd/mm/aaaa" />
+                <TextInput
+                  value={fechaCompra}
+                  onChangeText={setFechaCompra}
+                  style={styles.minminput}
+                  placeholder="dd/mm/aaaa"
+                />
               </View>
 
               <View style={{ display: "flex", width: "49%", gap: 5 }}>
                 <Text style={{ fontSize: 12, color: "#696969ff" }}>
                   Fecha Caducidad
                 </Text>
-                <TextInput 
-                value={fechaCaducidad}
-                onChangeText={setFechaCaducidad}
-                style={styles.minminput} placeholder="dd/mm/aaaa" />
+                <TextInput
+                  value={fechaCaducidad}
+                  onChangeText={setFechaCaducidad}
+                  style={styles.minminput}
+                  placeholder="dd/mm/aaaa"
+                />
               </View>
             </View>
 
@@ -224,10 +247,10 @@ const Registrar = ({ setShowbuttons }: any) => {
               </TouchableOpacity>
             </View>
             <TextInput
-            value={cantidad}
-            onChangeText={setCantidad}
-            keyboardType="numeric"
-            placeholder="Cantidad en stock"
+              value={cantidad}
+              onChangeText={setCantidad}
+              keyboardType="numeric"
+              placeholder="Cantidad en stock"
               style={{
                 borderWidth: 1,
                 borderRadius: 5,
@@ -236,10 +259,9 @@ const Registrar = ({ setShowbuttons }: any) => {
                 marginBottom: 10,
                 paddingLeft: 5,
               }}
-            >
-            </TextInput>
+            ></TextInput>
             <TouchableOpacity
-            onPress={()=>guardarProducto()}
+              onPress={() => guardarProducto()}
               style={{
                 borderColor: "#0a3b6c",
                 borderWidth: 1,
