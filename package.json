@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
+    "@react-native-firebase/app": "^23.5.0",
+    "@react-native-firebase/firestore": "^23.5.0",
     "@rneui/themed": "^4.0.0-rc.8",
     "expo": "~54.0.25",
     "expo-barcode-scanner": "^13.0.1",
