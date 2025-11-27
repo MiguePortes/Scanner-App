@@ -5,17 +5,32 @@ import {
   StyleSheet,
   Pressable,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import React from "react";
 import { useState, useEffect } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import Entypo from "@expo/vector-icons/Entypo";
 
+//* BD firebase
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "../firebaseConfig";
+
 const Registrar = ({ setShowbuttons }: any) => {
-  const [permission, requestPermission] = useCameraPermissions();
-  const [scannerVisible, setScannerVisible] = useState(false);
+  //* Inputs
+  const [nombre, setNombre] = useState("");
+  const [marca, setMarca] = useState("");
+  const [proveedor, setProveedor] = useState("");
+  const [precioCompra, setPrecioCompra] = useState("");
+  const [precioVenta, setPrecioVenta] = useState("");
+  const [fechaCompra, setFechaCompra] = useState("");
+  const [fechaCaducidad, setFechaCaducidad] = useState("");
+  const [ cantidad, setCantidad] = useState("");
   const [codigo, setCodigo] = useState("");
 
+  //* Inicio camera
+  const [permission, requestPermission] = useCameraPermissions();
+  const [scannerVisible, setScannerVisible] = useState(false);
   useEffect(() => {
     requestPermission();
   }, []);
@@ -26,8 +41,8 @@ const Registrar = ({ setShowbuttons }: any) => {
   };
 
   const handleclosecamer = () => {
-    setScannerVisible(false)
-    setShowbuttons(true)
+    setScannerVisible(false);
+    setShowbuttons(true);
   };
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
@@ -46,6 +61,44 @@ const Registrar = ({ setShowbuttons }: any) => {
       </View>
     );
   }
+  //* fin camera
+
+  const guardarProducto = async () => {
+    if (!nombre || !marca) {
+      Alert.alert("Error", "Nombre y marca son obligatorios.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "productos"), {
+        nombre,
+        marca,
+        proveedor,
+        precioCompra,
+        precioVenta,
+        fechaCompra,
+        fechaCaducidad,
+        codigo,
+        cantidad,
+        fechaCreacion: new Date(),
+      });
+
+      Alert.alert("Éxito", "Producto guardado correctamente 🎉");
+
+      setNombre("");
+      setMarca("");
+      setProveedor("");
+      setPrecioCompra("");
+      setPrecioVenta("");
+      setFechaCompra("");
+      setFechaCaducidad("");
+      setCodigo("");
+      setCantidad("")
+    } catch (error) {
+      Alert.alert("Error", "No se pudo guardar: " + error);
+      console.log(error);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -57,16 +110,17 @@ const Registrar = ({ setShowbuttons }: any) => {
             onBarcodeScanned={handleBarcodeScanned}
             barcodeScannerSettings={{
               barcodeTypes: ["qr", "ean13", "ean8", "code128"],
-            }}/>
+            }}
+          />
           <TouchableOpacity
             style={{
-                position: "absolute",
-                bottom: 50,
-                left: "35%",
-                backgroundColor: "#f00",
-                borderRadius: 10,
-                width: "30%",
-                padding: 20,
+              position: "absolute",
+              bottom: 50,
+              left: "35%",
+              backgroundColor: "#f00",
+              borderRadius: 10,
+              width: "30%",
+              padding: 20,
             }}
             onPress={() => handleclosecamer()}
           >
@@ -83,9 +137,18 @@ const Registrar = ({ setShowbuttons }: any) => {
 
           <View style={styles.content}>
             <Text style={styles.label}>Datos generales</Text>
-            <TextInput style={styles.Input} placeholder="Nombre del Producto" />
-            <TextInput style={styles.Input} placeholder="Marca" />
-            <TextInput style={styles.Input} placeholder="Proveedor" />
+            <TextInput 
+            value={nombre}
+            onChangeText={setNombre}
+            style={styles.Input} placeholder="Nombre del Producto" />
+            <TextInput 
+            value={marca}
+            onChangeText={setMarca}
+            style={styles.Input} placeholder="Marca" />
+            <TextInput
+            value={proveedor}
+            onChangeText={setProveedor}
+            style={styles.Input} placeholder="Proveedor" />
 
             <Text style={styles.label}>Precios</Text>
             <View
@@ -95,8 +158,14 @@ const Registrar = ({ setShowbuttons }: any) => {
                 justifyContent: "space-between",
               }}
             >
-              <TextInput style={styles.minput} placeholder="Precio de Compra" />
-              <TextInput style={styles.minput} placeholder="Precio de Venta" />
+              <TextInput
+              value={precioCompra}
+              onChangeText={setPrecioCompra}
+              style={styles.minput} placeholder="Precio de Compra" />
+              <TextInput 
+              value={precioVenta}
+              onChangeText={setPrecioCompra}
+              style={styles.minput} placeholder="Precio de Venta" />
             </View>
 
             <Text style={styles.label}>Fechas</Text>
@@ -111,14 +180,20 @@ const Registrar = ({ setShowbuttons }: any) => {
                 <Text style={{ fontSize: 12, color: "#696969ff" }}>
                   Fecha Compra
                 </Text>
-                <TextInput style={styles.minminput} placeholder="dd/mm/aaaa" />
+                <TextInput 
+                value={fechaCompra}
+                onChangeText={setFechaCompra}
+                style={styles.minminput} placeholder="dd/mm/aaaa" />
               </View>
 
               <View style={{ display: "flex", width: "49%", gap: 5 }}>
                 <Text style={{ fontSize: 12, color: "#696969ff" }}>
                   Fecha Caducidad
                 </Text>
-                <TextInput style={styles.minminput} placeholder="dd/mm/aaaa" />
+                <TextInput 
+                value={fechaCaducidad}
+                onChangeText={setFechaCaducidad}
+                style={styles.minminput} placeholder="dd/mm/aaaa" />
               </View>
             </View>
 
@@ -148,7 +223,11 @@ const Registrar = ({ setShowbuttons }: any) => {
                 <Entypo name="camera" size={42} color="black" />
               </TouchableOpacity>
             </View>
-            <Text
+            <TextInput
+            value={cantidad}
+            onChangeText={setCantidad}
+            keyboardType="numeric"
+            placeholder="Cantidad en stock"
               style={{
                 borderWidth: 1,
                 borderRadius: 5,
@@ -158,9 +237,9 @@ const Registrar = ({ setShowbuttons }: any) => {
                 paddingLeft: 5,
               }}
             >
-              Cantidad en stock:{" "}
-            </Text>
+            </TextInput>
             <TouchableOpacity
+            onPress={()=>guardarProducto()}
               style={{
                 borderColor: "#0a3b6c",
                 borderWidth: 1,
