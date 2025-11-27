@@ -1,11 +1,23 @@
 import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View, TextInput, Button } from "react-native";
+import { StyleSheet, Text, View, TextInput, Button, Alert, TouchableOpacity } from "react-native";
 import { useState, useEffect } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
 
+import { collection, addDoc } from "firebase/firestore";
+import { db } from "./firebaseConfig";
+
 export default function App() {
   const [permission, requestPermission] = useCameraPermissions();
+
   const [scannerVisible, setScannerVisible] = useState(false);
+
+  const [nombre, setNombre] = useState("");
+  const [marca, setMarca] = useState("");
+  const [proveedor, setProveedor] = useState("");
+  const [precioCompra, setPrecioCompra] = useState("");
+  const [precioVenta, setPrecioVenta] = useState("");
+  const [fechaCompra, setFechaCompra] = useState("");
+  const [fechaCaducidad, setFechaCaducidad] = useState("");
   const [codigo, setCodigo] = useState("");
 
   useEffect(() => {
@@ -14,10 +26,48 @@ export default function App() {
 
   const handleBarcodeScanned = ({ data }: { data: string }) => {
     setCodigo(data);
-    setScannerVisible(false);
+    setScannerVisible(false); 
   };
 
+  const guardarProducto = async () => {
+    if (!nombre || !marca) {
+      Alert.alert("Error", "Nombre y marca son obligatorios.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "productos"), {
+        nombre,
+        marca,
+        proveedor,
+        precioCompra,
+        precioVenta,
+        fechaCompra,
+        fechaCaducidad,
+        codigo,
+        fechaCreacion: new Date(),
+      });
+
+      Alert.alert("Éxito", "Producto guardado correctamente 🎉");
+
+      setNombre("");
+      setMarca("");
+      setProveedor("");
+      setPrecioCompra("");
+      setPrecioVenta("");
+      setFechaCompra("");
+      setFechaCaducidad("");
+      setCodigo("");
+
+    } catch (error) {
+      Alert.alert("Error", "No se pudo guardar: " + error);
+      console.log(error);
+    }
+  };
+
+
   if (!permission) return <Text>Cargando permisos...</Text>;
+
   if (!permission.granted) {
     return (
       <View style={styles.container}>
@@ -30,26 +80,80 @@ export default function App() {
   return (
     <View style={styles.container}>
       {scannerVisible ? (
-        <CameraView
-          style={{ flex: 1, width: "100%" }}
-          facing="back"
-          onBarcodeScanned={handleBarcodeScanned}
-          barcodeScannerSettings={{
-            barcodeTypes: ["qr", "ean13", "ean8", "code128"],
-          }}
-        />
+      
+        <View style={{ flex: 1, width: "100%" }}>
+          <CameraView
+            style={{ flex: 1 }}
+            facing="back"
+            onBarcodeScanned={handleBarcodeScanned}
+            barcodeScannerSettings={{
+              barcodeTypes: ["qr", "ean13", "ean8", "code128"],
+            }}
+          />
+
+      
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setScannerVisible(false)}
+          >
+            <Text style={styles.closeButtonText}>Cerrar Cámara</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <>
           <Text style={styles.title}>Scanner App</Text>
 
           <View>
-            <TextInput style={styles.Input} placeholder="Nombre del Producto" />
-            <TextInput style={styles.Input} placeholder="Marca" />
-            <TextInput style={styles.Input} placeholder="Proveedor" />
-            <TextInput style={styles.Input} placeholder="Precio de Compra" />
-            <TextInput style={styles.Input} placeholder="Precio de Venta" />
-            <TextInput style={styles.Input} placeholder="Fecha de Compra" />
-            <TextInput style={styles.Input} placeholder="Fecha de Caducidad" />
+            <TextInput
+              style={styles.Input}
+              placeholder="Nombre del Producto"
+              value={nombre}
+              onChangeText={setNombre}
+            />
+
+            <TextInput
+              style={styles.Input}
+              placeholder="Marca"
+              value={marca}
+              onChangeText={setMarca}
+            />
+
+            <TextInput
+              style={styles.Input}
+              placeholder="Proveedor"
+              value={proveedor}
+              onChangeText={setProveedor}
+            />
+
+            <TextInput
+              style={styles.Input}
+              placeholder="Precio de Compra"
+              keyboardType="numeric"
+              value={precioCompra}
+              onChangeText={setPrecioCompra}
+            />
+
+            <TextInput
+              style={styles.Input}
+              placeholder="Precio de Venta"
+              keyboardType="numeric"
+              value={precioVenta}
+              onChangeText={setPrecioVenta}
+            />
+
+            <TextInput
+              style={styles.Input}
+              placeholder="Fecha de Compra"
+              value={fechaCompra}
+              onChangeText={setFechaCompra}
+            />
+
+            <TextInput
+              style={styles.Input}
+              placeholder="Fecha de Caducidad"
+              value={fechaCaducidad}
+              onChangeText={setFechaCaducidad}
+            />
 
             <TextInput
               style={styles.Input}
@@ -58,13 +162,17 @@ export default function App() {
               editable={false}
             />
           </View>
-          <View>
-            <Button title="Guardar" color="#ff714dff" />
-            <Button
-              title="Lector de Barras"
-              color="#081dffff"
-              onPress={() => setScannerVisible(true)}
-            />
+
+          <View style={{ marginTop: 10 }}>
+            <Button title="Guardar" color="#ff714dff" onPress={guardarProducto} />
+
+            <View style={{ marginTop: 8 }}>
+              <Button
+                title="Lector de Barras"
+                color="#081dffff"
+                onPress={() => setScannerVisible(true)}
+              />
+            </View>
           </View>
 
           <StatusBar style="auto" />
@@ -97,9 +205,23 @@ const styles = StyleSheet.create({
     padding: 10,
     fontSize: 16,
     color: "black",
-    margin: 4,
-    backgroundColor: "#ffffffff",
+    marginVertical: 4,
+    backgroundColor: "#fff",
     width: 260,
   },
+
+  closeButton: {
+    position: "absolute",
+    bottom: 40,
+    alignSelf: "center",
+    backgroundColor: "red",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 10,
+  },
+  closeButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
 });
- 
