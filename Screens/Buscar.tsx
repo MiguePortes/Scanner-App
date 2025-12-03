@@ -25,11 +25,15 @@ const Buscar = ({ setShowbuttons }: any) => {
   //Info
   const [product, setProduct] = useState<any>(null);
   const [codigo, setCodigo] = useState("");
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [producExist, setProductExist] = useState(false);
 
   const [permission, requestPermission] = useCameraPermissions();
-  const [scannerVisible, setScannerVisible] = useState(false);
 
-  const [producExist, setProductExist] = useState(false);
+  useEffect(() => {
+    if (!codigo) return;
+    obtenerProducto()
+  }, [codigo]);
 
   const obtenerProducto = async () => {
     const q = query(
@@ -56,18 +60,6 @@ const Buscar = ({ setShowbuttons }: any) => {
     setScannerVisible(false);
     setShowbuttons(true);
   };
-
-
-  //! Si se desea mantener el boton buscar eliminar esto
-
-  useEffect(() => {
-    if (!codigo) return;
-    obtenerProducto()
-  }, [codigo]);
-
-  //! Si se desea mantener el boton buscar eliminar esto
-
-
 
   const handleopencamer = () => {
     setScannerVisible(true);
@@ -127,8 +119,6 @@ const Buscar = ({ setShowbuttons }: any) => {
           <Text style={styles.title}>Buscar productos</Text>
 
           <View style={{ padding: 30 }}>
-
-          //! Boton buscar, si se quiere que se actualize la información despues de escanear, eliminar esto
             <TouchableOpacity
               onPress={() => obtenerProducto()}
               style={{
@@ -149,7 +139,6 @@ const Buscar = ({ setShowbuttons }: any) => {
                 Buscar
               </Text>
             </TouchableOpacity>
-          //! Boton buscar, si se quiere que se actualize la información despues de escanear, eliminar esto
 
             <View style={{ flexDirection: "row", marginBottom: 20, }}>
               <TextInput
@@ -240,9 +229,7 @@ const Buscar = ({ setShowbuttons }: any) => {
                     fontSize: 20,
                   }}
                 >
-                  {" "}
-                  Este producto no esta en la base de datos {"\n"} {"\n"}{" "}
-                  ¡Agregalo!{" "}
+                  Este producto no esta en la base de datos {"\n"} {"\n"}¡Agregalo!
                 </Text>
               )}
             </View>

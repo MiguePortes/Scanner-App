@@ -11,6 +11,7 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import Entypo from "@expo/vector-icons/Entypo";
+import DateTimePicker from "@react-native-community/datetimepicker";
 
 //* BD firebase
 import { collection, addDoc } from "firebase/firestore";
@@ -27,10 +28,16 @@ const Registrar = ({ setShowbuttons }: any) => {
   const [fechaCaducidad, setFechaCaducidad] = useState("");
   const [cantidad, setCantidad] = useState("");
   const [codigo, setCodigo] = useState("");
+  const [scannerVisible, setScannerVisible] = useState(false);
+  const [showDatePickerCompra, setShowDatePickerCompra] = useState(false);
+  const [showDatePickerCaducidad, setShowDatePickerCaducidad] = useState(false);
+  const [selectedDateCompra, setSelectedDateCompra] = useState(new Date());
+  const [selectedDateCaducidad, setSelectedDateCaducidad] = useState(new Date());
+  const [minCaducidadDate, setMinCaducidadDate] = useState(new Date());
 
   //* Inicio camera
   const [permission, requestPermission] = useCameraPermissions();
-  const [scannerVisible, setScannerVisible] = useState(false);
+  
   useEffect(() => {
     requestPermission();
   }, []);
@@ -48,6 +55,7 @@ const Registrar = ({ setShowbuttons }: any) => {
   const handleBarcodeScanned = ({ data }: { data: string }) => {
     setCodigo(data);
     setScannerVisible(false);
+    setShowbuttons(true);
   };
 
   if (!permission) return <Text>Cargando permisos...</Text>;
@@ -63,6 +71,28 @@ const Registrar = ({ setShowbuttons }: any) => {
   }
   //* fin camera
 
+  const handleDateChangeCompra = (event: any, date?: Date) => {
+    setShowDatePickerCompra(false);
+    if (date) {
+      setSelectedDateCompra(date);
+      const nextDay = new Date(date);
+      nextDay.setDate(nextDay.getDate() + 1);
+      setMinCaducidadDate(nextDay);
+      const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+      setFechaCompra(formattedDate);
+      setFechaCaducidad("");
+    }
+  };
+
+  const handleDateChangeCaducidad = (event: any, date?: Date) => {
+    setShowDatePickerCaducidad(false);
+    if (date) {
+      setSelectedDateCaducidad(date);
+      const formattedDate = `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+      setFechaCaducidad(formattedDate);
+    }
+  };
+
   const guardarProducto = async () => {
     if (
       nombre === "" ||
@@ -76,6 +106,37 @@ const Registrar = ({ setShowbuttons }: any) => {
       cantidad === ""
     ) {
       Alert.alert("Error", "Todos los campos son obligatorios.");
+      return;
+    }
+
+    const compra = parseFloat(precioCompra);
+    const venta = parseFloat(precioVenta);
+    const stock = parseInt(cantidad);
+
+    if (isNaN(compra) || compra <= 0 || compra.toString().includes('.')) {
+      Alert.alert("Error", "Precio de compra inválido. Solo números enteros positivos.");
+      return;
+    }
+
+    if (isNaN(venta) || venta <= 0 || venta.toString().includes('.')) {
+      Alert.alert("Error", "Precio de venta inválido. Solo números enteros positivos.");
+      return;
+    }
+
+    if (venta < compra) {
+      Alert.alert("Error", "El precio de venta no puede ser menor al de compra.");
+      return;
+    }
+
+    if (isNaN(stock) || stock <= 0) {
+      Alert.alert("Error", "Cantidad en stock inválida. Solo números enteros positivos.");
+      return;
+    }
+
+    const compraDate = new Date(selectedDateCompra);
+    const caducidadDate = new Date(selectedDateCaducidad);
+    if (caducidadDate <= compraDate) {
+      Alert.alert("Error", "La fecha de caducidad debe ser posterior a la de compra.");
       return;
     }
 
@@ -107,6 +168,9 @@ const Registrar = ({ setShowbuttons }: any) => {
     setFechaCaducidad("");
     setCodigo("");
     setCantidad("");
+    setSelectedDateCompra(new Date());
+    setSelectedDateCaducidad(new Date());
+    setMinCaducidadDate(new Date());
   };
 
   return (
@@ -148,19 +212,55 @@ const Registrar = ({ setShowbuttons }: any) => {
             <Text style={styles.label}>Datos generales</Text>
             <TextInput
               value={nombre}
-              onChangeText={setNombre}
+              onChangeText={(text) => {
+                let trimmed = text.trimStart();
+                let formatted = trimmed.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                let spaceCount = (formatted.match(/ /g) || []).length;
+                if (spaceCount > 2) {
+                  formatted = formatted.replace(/\s+/g, ' ');
+                  let parts = formatted.split(' ');
+                  if (parts.length > 3) {
+                    formatted = parts.slice(0, 3).join(' ');
+                  }
+                }
+                setNombre(formatted);
+              }}
               style={styles.Input}
               placeholder="Nombre del Producto"
             />
             <TextInput
               value={marca}
-              onChangeText={setMarca}
+              onChangeText={(text) => {
+                let trimmed = text.trimStart();
+                let formatted = trimmed.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                let spaceCount = (formatted.match(/ /g) || []).length;
+                if (spaceCount > 2) {
+                  formatted = formatted.replace(/\s+/g, ' ');
+                  let parts = formatted.split(' ');
+                  if (parts.length > 3) {
+                    formatted = parts.slice(0, 3).join(' ');
+                  }
+                }
+                setMarca(formatted);
+              }}
               style={styles.Input}
               placeholder="Marca"
             />
             <TextInput
               value={proveedor}
-              onChangeText={setProveedor}
+              onChangeText={(text) => {
+                let trimmed = text.trimStart();
+                let formatted = trimmed.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, '');
+                let spaceCount = (formatted.match(/ /g) || []).length;
+                if (spaceCount > 2) {
+                  formatted = formatted.replace(/\s+/g, ' ');
+                  let parts = formatted.split(' ');
+                  if (parts.length > 3) {
+                    formatted = parts.slice(0, 3).join(' ');
+                  }
+                }
+                setProveedor(formatted);
+              }}
               style={styles.Input}
               placeholder="Proveedor"
             />
@@ -175,15 +275,23 @@ const Registrar = ({ setShowbuttons }: any) => {
             >
               <TextInput
                 value={precioCompra}
-                onChangeText={setPrecioCompra}
+                onChangeText={(text) => {
+                  const numeric = text.replace(/[^0-9]/g, '');
+                  setPrecioCompra(numeric);
+                }}
                 style={styles.minput}
                 placeholder="Precio de Compra"
+                keyboardType="numeric"
               />
               <TextInput
                 value={precioVenta}
-                onChangeText={setPrecioVenta}
+                onChangeText={(text) => {
+                  const numeric = text.replace(/[^0-9]/g, '');
+                  setPrecioVenta(numeric);
+                }}
                 style={styles.minput}
                 placeholder="Precio de Venta"
+                keyboardType="numeric"
               />
             </View>
 
@@ -199,24 +307,46 @@ const Registrar = ({ setShowbuttons }: any) => {
                 <Text style={{ fontSize: 12, color: "#696969ff" }}>
                   Fecha Compra
                 </Text>
-                <TextInput
-                  value={fechaCompra}
-                  onChangeText={setFechaCompra}
-                  style={styles.minminput}
-                  placeholder="dd/mm/aaaa"
-                />
+                <TouchableOpacity onPress={() => setShowDatePickerCompra(true)}>
+                  <TextInput
+                    value={fechaCompra}
+                    style={styles.minminput}
+                    placeholder="dd/mm/aaaa"
+                    editable={false}
+                  />
+                </TouchableOpacity>
+                {showDatePickerCompra && (
+                  <DateTimePicker
+                    value={selectedDateCompra}
+                    mode="date"
+                    display="default"
+                    onChange={handleDateChangeCompra}
+                    maximumDate={new Date()}
+                  />
+                )}
               </View>
 
               <View style={{ display: "flex", width: "49%", gap: 5 }}>
                 <Text style={{ fontSize: 12, color: "#696969ff" }}>
                   Fecha Caducidad
                 </Text>
-                <TextInput
-                  value={fechaCaducidad}
-                  onChangeText={setFechaCaducidad}
-                  style={styles.minminput}
-                  placeholder="dd/mm/aaaa"
-                />
+                <TouchableOpacity onPress={() => setShowDatePickerCaducidad(true)}>
+                  <TextInput
+                    value={fechaCaducidad}
+                    style={styles.minminput}
+                    placeholder="dd/mm/aaaa"
+                    editable={false}
+                  />
+                </TouchableOpacity>
+                {showDatePickerCaducidad && (
+                  <DateTimePicker
+                    value={selectedDateCaducidad}
+                    mode="date"
+                    display="default"
+                    onChange={handleDateChangeCaducidad}
+                    minimumDate={minCaducidadDate}
+                  />
+                )}
               </View>
             </View>
 
@@ -248,7 +378,10 @@ const Registrar = ({ setShowbuttons }: any) => {
             </View>
             <TextInput
               value={cantidad}
-              onChangeText={setCantidad}
+              onChangeText={(text) => {
+                const numeric = text.replace(/[^0-9]/g, '');
+                setCantidad(numeric);
+              }}
               keyboardType="numeric"
               placeholder="Cantidad en stock"
               style={{
